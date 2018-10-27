@@ -13,6 +13,8 @@ def parse_start_arguments():
     parser.add_option("--unityPath", dest="UnityPath", default=True, help="Path to Unity application")
     parser.add_option("--projectPath", dest="ProjectPath", default=True, help="Path to Unity Project")
     parser.add_option("--logPath", dest="LogPath", default=True, help="Path to Unity Log File")
+    parser.add_option("-e", "--executionMessage", dest="ExecutionMethod", default=True, help="Execution method after unit started completly")
+    parser.add_option("--noTimer", dest="NoTimer", action='store_true', help="no timestamp should be displayed")
 
     (options, args) = parser.parse_args()
     return options
@@ -29,7 +31,7 @@ def start_unity_build_command():
                        " -quit "
                        "-batchmode "
                        "-nographics "
-                       "-executeMethod MyEditorScript.BuildWin", check=True, shell=True)
+                       "-executeMethod " + options.ExecutionMethod, check=True, shell=True)
     except subprocess.CalledProcessError as e:
         sys.exit(e.returncode)
 
@@ -53,7 +55,10 @@ def run_headless_thread(callback):
 
 
 def log(level, msg):
-    print(str(datetime.datetime.now()) + " [" + level + "] " + msg)
+    if options.NoTimer:
+        print("[" + level + "]" + msg)
+    else:
+        print(str(datetime.datetime.now()) + " [" + level + "] " + msg)
 
 
 try:
