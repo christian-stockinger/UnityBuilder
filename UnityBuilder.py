@@ -56,7 +56,7 @@ def run_headless_thread(callback):
 
 def log(level, msg):
     if options.NoTimer:
-        print("[" + level + "]" + msg)
+        print("[" + level + "] " + msg)
     else:
         print(str(datetime.datetime.now()) + " [" + level + "] " + msg)
 
