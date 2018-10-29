@@ -14,6 +14,7 @@ def parse_start_arguments():
     parser.add_option("--projectPath", dest="ProjectPath", default=True, help="Path to Unity Project")
     parser.add_option("--logPath", dest="LogPath", default=True, help="Path to Unity Log File")
     parser.add_option("-e", "--executionMessage", dest="ExecutionMethod", default=True, help="Execution method after unit started completly")
+    parser.add_option("-t", "--target", dest="Target", help="Build Target of the Build")
     parser.add_option("--noTimer", dest="NoTimer", action='store_true', help="no timestamp should be displayed")
 
     (options, args) = parser.parse_args()
@@ -28,6 +29,7 @@ def start_unity_build_command():
     try:
         subprocess.run(options.UnityPath + " -projectPath " + options.ProjectPath +
                        " -logfile " + options.LogPath +
+                       " -buildTarget " + options.Target +
                        " -quit "
                        "-batchmode "
                        "-nographics "
