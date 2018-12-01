@@ -7,6 +7,7 @@ import tailer
 import datetime
 import subprocess
 
+COMMAND_KILL_UNITY = r'TASKKILL /F /IM Unity.exe'
 
 def parse_start_arguments():
     parser = OptionParser()
@@ -63,6 +64,13 @@ def log(level, msg):
         print(str(datetime.datetime.now()) + " [" + level + "] " + msg)
 
 
+def cleanup_unity_process():
+    try:
+        log("INFO", "Cleaning up Unity process")
+        subprocess.call(COMMAND_KILL_UNITY, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as error:
+        log("WARN", "Couldn't kill unity " + str(error))
+
 try:
     log("DEBUG", "Starting with arguments: " + str(options))
     log("INFO", "Read logfile tailing")
@@ -70,5 +78,6 @@ try:
 
     log("INFO", "Start unity")
     start_unity_build_command()
+    cleanup_unity_process()
 except Exception as e:
     log("ERROR", "Failed to start a thread" + str(e))
