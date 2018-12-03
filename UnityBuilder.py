@@ -1,10 +1,7 @@
-import os
 import sys
-import threading
-import time
 from optparse import OptionParser
-import tailer
-import datetime
+from util import logger
+from util import fileLogger
 import subprocess
 
 
@@ -22,53 +19,42 @@ def parse_start_arguments():
 
 
 options = parse_start_arguments()
+LOGGER = logger.Logger(options.NoTimer)
 
 
 def start_unity_build_command():
-    log("INFO", "Start Unity Build")
+    LOGGER.info("Start Unity Build")
     try:
-        subprocess.run(options.UnityPath + " -projectPath " + options.ProjectPath +
-                       " -logfile " + options.LogPath +
-                       " -buildTarget " + options.Target +
-                       " -quit "
-                       "-batchmode "
-                       "-nographics "
-                       "-executeMethod " + options.ExecutionMethod, check=True, shell=True)
+        test = options.UnityPath + " -projectPath " + options.ProjectPath + \
+                       " -logfile " + options.LogPath + \
+                       " -buildTarget " + options.Target + \
+                       " -quit " \
+                       "-batchmode " \
+                       "-nographics " \
+                       "-executeMethod " + options.ExecutionMethod
+        subprocess.call(test)
     except subprocess.CalledProcessError as e:
         sys.exit(e.returncode)
 
 
-def read_log_file():
-    log("INFO", "Start tailing for logfile")
-    while (not os.path.exists(options.LogPath)):
-        log("DEBUG", "Logfile is non existent now, retrying in 0.1s")
-        time.sleep(0.1)
-
-    log("INFO", "Tail for log file started")
-    for line in tailer.follow(open(options.LogPath)):
-        log("UNITY", line)
-
-
-def run_headless_thread(callback):
-    t = threading.Thread(target=callback)
-    t.daemon = True
-    t.start()
-    return t
-
-
-def log(level, msg):
-    if options.NoTimer:
-        print("[" + level + "] " + msg)
-    else:
-        print(str(datetime.datetime.now()) + " [" + level + "] " + msg)
+def cleanup_unity_process():
+    try:
+        LOGGER.info("Cleaning up Unity process")
+        subprocess.call(r'TASKKILL /F /IM Unity.exe', stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as error:
+        LOGGER.warn("Couldn't kill unity " + str(error))
 
 
 try:
-    log("DEBUG", "Starting with arguments: " + str(options))
-    log("INFO", "Read logfile tailing")
-    logFileThread = run_headless_thread(read_log_file)
-
-    log("INFO", "Start unity")
+    LOGGER.log("DEBUG", "Starting with arguments: " + str(options))
+    LOGGER.info("Read logfile tailing")
+    logfile = fileLogger.ContinuousFileLogger(options.LogPath, options.NoTimer)
+    logfile.start()
+    LOGGER.info("Start unity")
     start_unity_build_command()
+    LOGGER.info("Cleanup Processes")
+    cleanup_unity_process()
+    LOGGER.info("Cleanup logger")
+    logfile.stop()
 except Exception as e:
-    log("ERROR", "Failed to start a thread" + str(e))
+    LOGGER.error("Failed to start a thread" + str(e))
