@@ -4,6 +4,7 @@ from util import logger
 from util import fileLogger
 import subprocess
 
+COMMAND_KILL_UNITY = r'TASKKILL /F /IM Unity.exe'
 
 def parse_start_arguments():
     parser = OptionParser()
@@ -45,6 +46,13 @@ def cleanup_unity_process():
         LOGGER.warn("Couldn't kill unity " + str(error))
 
 
+def cleanup_unity_process():
+    try:
+        log("INFO", "Cleaning up Unity process")
+        subprocess.call(COMMAND_KILL_UNITY, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as error:
+        log("WARN", "Couldn't kill unity " + str(error))
+
 try:
     LOGGER.log("DEBUG", "Starting with arguments: " + str(options))
     LOGGER.info("Read logfile tailing")
@@ -56,5 +64,6 @@ try:
     cleanup_unity_process()
     LOGGER.info("Cleanup logger")
     logfile.stop()
+
 except Exception as e:
     LOGGER.error("Failed to start a thread" + str(e))
