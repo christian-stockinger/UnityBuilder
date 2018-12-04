@@ -3,14 +3,14 @@ from datetime import datetime
 
 class Logger(object):
 
-    def __init__(self,no_timer):
+    def __init__(self, no_timer):
         self._no_Timer = no_timer
 
     def log(self, level, msg):
         if self._no_Timer:
-            print("[" + level + "] " + msg)
+            print("[" + level + "] " + msg.rstrip())
         else:
-            print(str(datetime.now()) + " [" + level + "] " + msg)
+            print(str(datetime.now()) + " [" + level + "] " + msg.rstrip())
 
     def warn(self, msg):
         self.log("Warning", msg)
