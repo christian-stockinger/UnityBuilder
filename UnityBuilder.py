@@ -46,9 +46,7 @@ def start_unity_build_command():
 def cleanup_unity_process():
     try:
         LOGGER.info("Cleaning up Unity process")
-        if options.MacBuild:
-            subprocess.call('killall Unity', stderr=subprocess.PIPE)
-        else:
+        if not options.MacBuild:
             subprocess.call(r'TASKKILL /F /IM Unity.exe', stderr=subprocess.PIPE)
     except subprocess.CalledProcessError as error:
         LOGGER.warn("Couldn't kill unity " + str(error))
