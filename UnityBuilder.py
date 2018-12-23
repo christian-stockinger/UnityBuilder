@@ -14,6 +14,7 @@ def parse_start_arguments():
     parser.add_option("-e", "--executionMessage", dest="ExecutionMethod", default=True, help="Execution method after unit started completly")
     parser.add_option("-t", "--target", dest="Target", help="Build Target of the Build")
     parser.add_option("--noTimer", dest="NoTimer", action='store_true', help="no timestamp should be displayed")
+    parser.add_option("--mac", dest="MacBuild", action='store_true', help="build unity on an mac device")
 
     (options, args) = parser.parse_args()
     return options
@@ -26,14 +27,17 @@ LOGGER = logger.Logger(options.NoTimer)
 def start_unity_build_command():
     LOGGER.info("Start Unity Build")
     try:
-        test = options.UnityPath + " -projectPath " + options.ProjectPath + \
+        build_command = options.UnityPath + " -projectPath " + options.ProjectPath + \
                        " -logfile " + options.LogPath + \
                        " -buildTarget " + options.Target + \
                        " -quit " \
                        "-batchmode " \
                        "-nographics " \
                        "-executeMethod " + options.ExecutionMethod
-        subprocess.call(test)
+        if options.MacBuild:
+            subprocess.call(build_command, shell=True)
+        else:
+            subprocess.call(build_command)
     except subprocess.CalledProcessError as e:
         sys.exit(e.returncode)
 
@@ -53,8 +57,9 @@ try:
     logfile.start()
     LOGGER.info("Start unity")
     start_unity_build_command()
-    LOGGER.info("Cleanup Processes")
-    cleanup_unity_process()
+    if not options.MacBuild:
+        LOGGER.info("Cleanup Processes")
+        cleanup_unity_process()
     LOGGER.info("Cleanup logger")
     logfile.stop()
 
