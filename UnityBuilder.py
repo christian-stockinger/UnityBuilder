@@ -35,7 +35,8 @@ def start_unity_build_command():
                        "-nographics " \
                        "-executeMethod " + options.ExecutionMethod
         if options.MacBuild:
-            subprocess.call(build_command, shell=True)
+            process = subprocess.Popen(build_command, shell=True, stdout=subprocess.PIPE)
+            process.wait()
         else:
             subprocess.call(build_command)
     except subprocess.CalledProcessError as e:
@@ -45,21 +46,33 @@ def start_unity_build_command():
 def cleanup_unity_process():
     try:
         LOGGER.info("Cleaning up Unity process")
-        subprocess.call(r'TASKKILL /F /IM Unity.exe', stderr=subprocess.PIPE)
+        if options.MacBuild:
+            subprocess.call('killall Unity', stderr=subprocess.PIPE)
+        else:
+            subprocess.call(r'TASKKILL /F /IM Unity.exe', stderr=subprocess.PIPE)
     except subprocess.CalledProcessError as error:
         LOGGER.warn("Couldn't kill unity " + str(error))
 
 
+def cleanup_old_logfile():
+    try:
+        open(options.LogPath, 'w').close()
+        LOGGER.info("old log cleared")
+    except FileNotFoundError:
+        LOGGER.info("No old log file was found")
+
+
 try:
     LOGGER.log("DEBUG", "Starting with arguments: " + str(options))
+    LOGGER.info("Cleaning old logfile")
+    cleanup_old_logfile()
     LOGGER.info("Read logfile tailing")
     logfile = fileLogger.ContinuousFileLogger(options.LogPath, options.NoTimer)
     logfile.start()
     LOGGER.info("Start unity")
     start_unity_build_command()
-    if not options.MacBuild:
-        LOGGER.info("Cleanup Processes")
-        cleanup_unity_process()
+    LOGGER.info("Cleanup Processes")
+    cleanup_unity_process()
     LOGGER.info("Cleanup logger")
     logfile.stop()
 
