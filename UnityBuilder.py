@@ -1,3 +1,4 @@
+import platform
 import subprocess
 import sys
 from optparse import OptionParser
@@ -14,14 +15,20 @@ def parse_start_arguments():
     parser.add_option("-e", "--executionMessage", dest="ExecutionMethod", default=True, help="Execution method after unit started completly")
     parser.add_option("-t", "--target", dest="Target", help="Build Target of the Build")
     parser.add_option("--noTimer", dest="NoTimer", action='store_true', help="no timestamp should be displayed")
-    parser.add_option("--mac", dest="MacBuild", action='store_true', help="build unity on an mac device")
 
     (options, args) = parser.parse_args()
     return options
 
 
+def detect_os():
+    operation_system = platform.system()
+    LOGGER.info("Detected " + operation_system + " as Operation System")
+    return operation_system
+
+
 options = parse_start_arguments()
 LOGGER = logger.Logger(options.NoTimer)
+os = detect_os()
 
 
 def start_unity_build_command():
@@ -34,7 +41,7 @@ def start_unity_build_command():
                        "-batchmode " \
                        "-nographics " \
                        "-executeMethod " + options.ExecutionMethod
-        if options.MacBuild:
+        if os != "Windows":
             process = subprocess.Popen(build_command, shell=True, stdout=subprocess.PIPE)
             process.wait()
         else:
@@ -46,7 +53,7 @@ def start_unity_build_command():
 def cleanup_unity_process():
     try:
         LOGGER.info("Cleaning up Unity process")
-        if not options.MacBuild:
+        if os == "Windows":
             subprocess.call(r'TASKKILL /F /IM Unity.exe', stderr=subprocess.PIPE)
     except subprocess.CalledProcessError as error:
         LOGGER.warn("Couldn't kill unity " + str(error))
